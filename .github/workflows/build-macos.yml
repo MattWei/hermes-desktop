@@ -1,0 +1,85 @@
+name: Build macOS Desktop
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Build target'
+        required: true
+        default: 'mac'
+        type: choice
+        options:
+          - mac
+          - mac:dmg
+          - mac:zip
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch: [arm64, x64]
+        include:
+          - arch: arm64
+            runner: macos-latest    # macOS 14+ (Apple Silicon)
+          - arch: x64
+            runner: macos-13        # macOS 13 (Intel)
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Build macOS app (${{ matrix.arch }})
+        run: npm run dist:${{ inputs.target || 'mac' }}
+        env:
+          # Apple Developer signing — optional, skip if not set
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # Notarization — optional, skip if not set
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_NOTARY_PROFILE: ${{ secrets.APPLE_NOTARY_PROFILE }}
+          # Use npm_config_arch to match the runner arch
+          npm_config_arch: ${{ matrix.arch }}
+
+      - name: Upload artifacts (${{ matrix.arch }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-desktop-macos-${{ matrix.arch }}
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/mac-*/Hermes.app
+          if-no-files-found: warn
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            hermes-desktop-macos-arm64/*.dmg
+            hermes-desktop-macos-arm64/*.zip
+            hermes-desktop-macos-x64/*.dmg
+            hermes-desktop-macos-x64/*.zip
+          generate_release_notes: true
