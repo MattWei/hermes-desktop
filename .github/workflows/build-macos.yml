@@ -5,28 +5,10 @@ on:
     branches: [main]
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      target:
-        description: 'Build target'
-        required: true
-        default: 'mac'
-        type: choice
-        options:
-          - mac
-          - mac:dmg
-          - mac:zip
 
 jobs:
   build:
-    strategy:
-      matrix:
-        arch: [arm64, x64]
-        include:
-          - arch: arm64
-            runner: macos-latest    # macOS 14+ (Apple Silicon)
-          - arch: x64
-            runner: macos-13        # macOS 13 (Intel)
-    runs-on: ${{ matrix.runner }}
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
 
@@ -44,23 +26,21 @@ jobs:
       - name: Build renderer
         run: npm run build
 
-      - name: Package macOS app (${{ matrix.arch }})
+      - name: Package macOS app
         run: npx electron-builder --mac --publish=never
         env:
-          # Apple Developer signing — optional, skip if not set
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          # Notarization — optional, skip if not set
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_NOTARY_PROFILE: ${{ secrets.APPLE_NOTARY_PROFILE }}
-          npm_config_arch: ${{ matrix.arch }}
+          npm_config_arch: x64
 
-      - name: Upload artifacts (${{ matrix.arch }})
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: hermes-desktop-macos-${{ matrix.arch }}
+          name: hermes-desktop-macos-x64
           path: |
             release/*.dmg
             release/*.zip
@@ -79,8 +59,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            hermes-desktop-macos-arm64/*.dmg
-            hermes-desktop-macos-arm64/*.zip
             hermes-desktop-macos-x64/*.dmg
             hermes-desktop-macos-x64/*.zip
           generate_release_notes: true

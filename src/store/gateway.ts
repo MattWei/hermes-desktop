@@ -1,4 +1,4 @@
-import type { ConnectionState, GatewayEvent } from '@hermes/shared'
+import type { ConnectionState, GatewayEvent } from '@/lib/json-rpc-gateway'
 import { atom } from 'nanostores'
 
 import { HermesGateway } from '@/hermes'
