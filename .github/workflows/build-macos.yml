@@ -41,8 +41,11 @@ jobs:
       - name: Type check
         run: npm run type-check
 
-      - name: Build macOS app (${{ matrix.arch }})
-        run: npm run dist:${{ inputs.target || 'mac' }}
+      - name: Build renderer
+        run: npm run build
+
+      - name: Package macOS app (${{ matrix.arch }})
+        run: npx electron-builder --mac --publish=never
         env:
           # Apple Developer signing — optional, skip if not set
           CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -52,7 +55,6 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_NOTARY_PROFILE: ${{ secrets.APPLE_NOTARY_PROFILE }}
-          # Use npm_config_arch to match the runner arch
           npm_config_arch: ${{ matrix.arch }}
 
       - name: Upload artifacts (${{ matrix.arch }})
