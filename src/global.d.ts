@@ -1,5 +1,9 @@
 export {}
 
+// Module declarations for packages without bundled types
+declare module '@tabler/icons-react'
+declare module '@xterm/xterm'
+
 declare global {
   interface Window {
     hermesDesktop: {

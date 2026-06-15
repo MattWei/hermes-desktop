@@ -32,7 +32,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const APP_ROOT = path.resolve(__dirname, '..')
-const REPO_ROOT = path.resolve(APP_ROOT, '..', '..')
+const REPO_ROOT = path.resolve(APP_ROOT)
 const STAGE_ROOT = path.join(APP_ROOT, 'build', 'native-deps')
 
 // The target arch may be overridden by electron-builder via npm_config_arch

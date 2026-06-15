@@ -33,7 +33,7 @@ const { execSync } = require("child_process")
 const STAMP_SCHEMA_VERSION = 1
 
 const DESKTOP_ROOT = path.resolve(__dirname, "..")
-const REPO_ROOT = path.resolve(DESKTOP_ROOT, "..", "..")
+const REPO_ROOT = path.resolve(DESKTOP_ROOT)
 const OUT_DIR = path.join(DESKTOP_ROOT, "build")
 const OUT_FILE = path.join(OUT_DIR, "install-stamp.json")
 
